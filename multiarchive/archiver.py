@@ -1,12 +1,19 @@
 import zipfile
 import os
 # from dotenv import load_dotenv
-import random_string
+from randomstr import Randomizer
 import subprocess
 import itertools
 
 class Archiver:
+
     def __init__(self, main_password="SuperSecretMainPassword"):
+        """
+        Initialization for the archiver class
+
+            :param main_password: Main password for which the dynamic password will be derived
+                    on each archive
+        """
         self.__base_dir = os.getcwd()
         self.__extraction_path = 'Extracted'
         self.__archival_path = 'Archived'
@@ -21,11 +28,6 @@ class Archiver:
         # if so, zip file may have two correct passwords
         self.__pwd_len = 62
 
-    def set_extraction_path(self, extraction_path):
-        self.__extraction_path = extraction_path
-
-    def set_archival_path(self, archival_path):
-        self.__archival_path = archival_path
 
     def unzip_archives(
             self,
@@ -61,7 +63,7 @@ class Archiver:
             if type(pwd) == list:
                 pwd = itertools.cycle(pwd)
 
-            elif type(pwd) == str or pwd == 0
+            elif type(pwd) == str or pwd == 0:
                 pass
 
             else:
@@ -110,7 +112,7 @@ class Archiver:
                         zipObj.extractall(current_zip_extraction_path, pwd=bytes(next(pwd), 'utf-8'))
 
                     elif pwd == 0:
-                        dynamic_password = random_string.create_random_str(
+                        dynamic_password = Randomizer.create_random_str(
                             self.__main_password,
                             zip_filename,
                             self.__pwd_len
@@ -186,7 +188,7 @@ class Archiver:
             # Set the file name, output zip file, the password
             zip_filename = fyl.split(os.sep)[-1]
             output_zip = os.path.join(target_archival_path, zip_filename)
-            dynamic_password = random_string.create_random_str(
+            dynamic_password = Randomizer.create_random_str(
                 self.__main_password,
                 zip_filename,
                 self.__pwd_len
@@ -210,3 +212,13 @@ class Archiver:
                 )
             except Exception as e:
                 print(f'Error has occurred while archiving {e.args}')
+
+    # Setters
+    def set_extraction_path(self, extraction_path):
+        self.__extraction_path = extraction_path
+
+    def set_archival_path(self, archival_path):
+        self.__archival_path = archival_path
+
+    def set_protected_archival_path(self, archival_path):
+        self.__archival_path_protected = archival_path
