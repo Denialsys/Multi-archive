@@ -3,7 +3,7 @@ import os
 # from dotenv import load_dotenv
 import random_string
 import subprocess
-
+import itertools
 
 class Archiver:
     def __init__(self, main_password="SuperSecretMainPassword"):
@@ -12,6 +12,14 @@ class Archiver:
         self.__archival_path = 'Archived'
         self.__archival_path_protected = 'Protected_Archive'
         self.__main_password = main_password
+
+        # 7zip command, 0 - archive name, 1 - target file, 2 - password
+        self.__template_cmd = '7z\na\n{0}\n{1}\n-mx5\n-p{2}'
+        self.__cmd_special_chars = '(){}&"><|^'
+
+        # If over than 64 chars, it will be encrypted with SHA-1
+        # if so, zip file may have two correct passwords
+        self.__pwd_len = 62
 
     def set_extraction_path(self, extraction_path):
         self.__extraction_path = extraction_path
@@ -41,50 +49,164 @@ class Archiver:
                     If set to false, the target_path value must be absolute
             :param in_file_ext: The input archive file extension
             :param out_file_ext: The output archive file extension
-            :param pwd: Password in string format, Note that this password will be used to all archives
+            :param pwd: Password in string or list format, rules:
+                    - String type: The single password will be applied to all archive
+                    - List type: The password will be mapped as to each archive files
+                    - 0 (zero): The password will be dynamic based from the archived name and randomizer
+            :return: None
+        """
+        try:
 
+            # Check if the password type was compliant
+            if type(pwd) == list:
+                pwd = itertools.cycle(pwd)
+
+            elif type(pwd) == str or pwd == 0
+                pass
+
+            else:
+                print(f'Invalid type of password: {type(pwd)}')
+                return
+
+            zip_list = []
+
+            if is_path_relative:
+                target_extraction_path = os.path.join(base_dir, target_path, self.__extraction_path)
+                zip_file_path = os.path.join(base_dir, target_path)
+            else:
+                target_extraction_path = os.path.join(target_path, self.__extraction_path)
+                zip_file_path = target_path
+
+            print(f'\nBase Directory {self.__base_dir}')
+            print(f'Target extraction path {target_extraction_path}')
+
+            # Gather the files to extract
+            for fyl in os.listdir(zip_file_path):
+                if fyl.endswith(in_file_ext):
+                    zip_list.append(os.path.join(zip_file_path, fyl))
+
+            # If the target directory does not exist yet
+            if zip_list:
+                if not os.path.exists(target_extraction_path):
+                    print(f'Creating output directory: {target_extraction_path}')
+                    os.makedirs(target_extraction_path)
+
+            print('-----------')
+
+            # Begin the extraction
+            for fyl in zip_list:
+                print(f'Extracting: {fyl}')
+
+                zip_filename = fyl.split(os.sep)[-1].replace(out_file_ext, '')
+                current_zip_extraction_path = os.path.join(target_extraction_path, zip_filename)
+
+                # Extract all the contents of zip file into target directory
+                # Use password if password was specified
+                with zipfile.ZipFile(fyl, 'r') as zipObj:
+                    if type(pwd) == str:
+                        zipObj.extractall(current_zip_extraction_path, pwd=bytes(pwd, 'utf-8'))
+
+                    elif type(pwd) == itertools.cycle:
+                        zipObj.extractall(current_zip_extraction_path, pwd=bytes(next(pwd), 'utf-8'))
+
+                    elif pwd == 0:
+                        dynamic_password = random_string.create_random_str(
+                            self.__main_password,
+                            zip_filename,
+                            self.__pwd_len
+                        )
+                        zipObj.extractall(current_zip_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
+
+                    else:
+                        zipObj.extractall(current_zip_extraction_path)
+
+        except Exception as e:
+            print(f'Error during decompression of archives: {e.args}')
+
+
+    def zip_with_dynamic_password(
+            self,
+            target_path,
+            password_list=None,
+            is_path_relative=True,
+            in_file_ext='.zip'):
+        """
+        Create multiple password-protected zip files with dynamic and random password
+        The target files must be archived, file will be nested but easier to process
+
+        Example usage:
+            zip_with_dynamic_password('F:\\Desktop\\items', False)
+
+            :param target_path: Target path where the directories to archive are located
+            :param password_list: list of password to feed on archiving files
+            :param is_path_relative: Meaning the target directory/s path are relative to
+                    script path. If set to false, the target_path value must be absolute
+            :param in_file_ext: File format for the archive file
             :return: None
         """
 
-        zip_list = []
+        # Check first if the 7z was on the system
+        try:
+            subprocess.Popen(['7z'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+        except Exception as e:
+            print(f'7zip is not available {e.args}')
+            return
+
+        # Check first if the list of password is a list type
+        if type(password_list) is not list:
+            print(f'Check if the password is a list type')
+            return
 
         if is_path_relative:
-            target_extraction_path = os.path.join(base_dir, target_path, self.__extraction_path)
-            zip_file_path = os.path.join(base_dir, target_path)
+            target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_path_protected)
+            file_path = os.path.join(self.__base_dir, target_path)
         else:
-            target_extraction_path = os.path.join(target_path, self.__extraction_path)
-            zip_file_path = target_path
+            target_archival_path = os.path.join(target_path, self.__archival_path_protected)
+            file_path = target_path
 
-        print(f'\nBase Directory {self.__base_dir}')
-        print(f'Target extraction path {target_extraction_path}')
+        print(f'\nBase Directory {base_dir}')
+        print(f'Target archival path {target_archival_path}')
+        zip_list = []
 
         # Gather the files to extract
-        for fyl in os.listdir(zip_file_path):
+        for fyl in os.listdir(file_path):
             if fyl.endswith(in_file_ext):
-                zip_list.append(os.path.join(zip_file_path, fyl))
+                zip_list.append(os.path.join(file_path, fyl))
 
         # If the target directory does not exist yet
         if zip_list:
-            if not os.path.exists(target_extraction_path):
-                print(f'Creating output directory: {target_extraction_path}')
-                os.makedirs(target_extraction_path)
+            if not os.path.exists(target_archival_path):
+                print(f'Creating output directory: {target_archival_path}')
+                os.makedirs(target_archival_path)
 
         print('-----------')
 
-        # Begin the extraction
         for fyl in zip_list:
-            print(f'Extracting: {fyl}')
 
-            zip_filename = fyl.split(os.sep)[-1].replace(out_file_ext, '')
-            current_zip_extraction_path = os.path.join(target_extraction_path, zip_filename)
+            # Set the file name, output zip file, the password
+            zip_filename = fyl.split(os.sep)[-1]
+            output_zip = os.path.join(target_archival_path, zip_filename)
+            dynamic_password = random_string.create_random_str(
+                self.__main_password,
+                zip_filename,
+                self.__pwd_len
+            )
 
-            # Extract all the contents of zip file into target directory
-            # Use password if password was specified
-            with zipfile.ZipFile(fyl, 'r') as zipObj:
-                if pwd:
-                    zipObj.extractall(current_zip_extraction_path, pwd=bytes(pwd, 'utf-8'))
-                else:
-                    zipObj.extractall(current_zip_extraction_path)
+            # Remove the command line special characters
+            for character in self.__cmd_special_chars:
+                dynamic_password = dynamic_password.replace(character, '')
 
+            # Construct the command to zip file
+            print(f'Creating: {output_zip}, password: {dynamic_password}')
+            process_cmd = self.__template_cmd.format(output_zip, fyl, dynamic_password)
+            process_cmd = process_cmd.split('\n')
 
-
+            # Start the compression
+            try:
+                subprocess.Popen(
+                    process_cmd,
+                    stderr=subprocess.STDOUT,
+                    stdout=subprocess.PIPE
+                )
+            except Exception as e:
+                print(f'Error has occurred while archiving {e.args}')
