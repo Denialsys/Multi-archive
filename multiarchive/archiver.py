@@ -40,10 +40,13 @@ class Archiver:
         """
         Will collect and extract all the archive file from the specified path.
         Will create a directory for the output extracted files
+        This function can accept a single password or list of passwords for
+        extraction of zip files with each their own password
 
         Example usage:
             unzip_archives('targ\\items')
             unzip_archives('h:\\Desktop\\test', False)
+            unzip_archives('h:\\Desktop\\test', pwd=['junioe', 'caresui'])
 
             :param target_path: The target location where archive files are located
                     (if nested use double slash '\\' for windows).
@@ -213,7 +216,7 @@ class Archiver:
             except Exception as e:
                 print(f'Error has occurred while archiving {e.args}')
 
-    def zip_lambdas(
+    def archive_lambdas(
             self,
             target_path,
             is_path_relative=True,
@@ -225,8 +228,8 @@ class Archiver:
     lambda script inside. This can be used for AWS Lambda backup
 
     Example usage:
-        zip_lambdas('targ\\items\\Extracted')
-        zip_lambdas('h:\\Desktop\\test', False)
+        archive_lambdas('targ\\items\\Extracted')
+        archive_lambdas('h:\\Desktop\\test', False)
 
         :param target_path: Target path where the directories to archive are located
         :param is_path_relative: Meaning the target directory/s path are relative to
