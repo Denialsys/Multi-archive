@@ -5,6 +5,7 @@ from randomstr import Randomizer
 import subprocess
 import itertools
 
+
 class Archiver:
 
     def __init__(self, main_password="SuperSecretMainPassword"):
@@ -28,11 +29,10 @@ class Archiver:
         # if so, zip file may have two correct passwords
         self.__pwd_len = 62
 
-
     def unzip_archives(
             self,
             target_path,
-            is_path_relative = True,
+            is_path_relative=True,
             in_file_ext='.zip',
             out_file_ext='.zip',
             pwd=None):
@@ -128,7 +128,6 @@ class Archiver:
         except Exception as e:
             print(f'Error during decompression of archives: {e.args}')
 
-
     def zip_with_dynamic_password(
             self,
             target_path,
@@ -222,55 +221,55 @@ class Archiver:
             is_path_relative=True,
             out_file_ext='.zip'):
 
-    """
-    Compress the extracted lambda files, will create an archive file similar to the
-    exported archive file of AWS Lambda (No password), the package must be a directory with
-    lambda script inside. This can be used for AWS Lambda backup
+        """
+        Compress the extracted lambda files, will create an archive file similar to the
+        exported archive file of AWS Lambda (No password), the package must be a directory with
+        lambda script inside. This can be used for AWS Lambda backup
 
-    Example usage:
-        zip_lambdas('targ\\items\\Extracted')
-        zip_lambdas('h:\\Desktop\\test', False)
+        Example usage:
+            zip_lambdas('targ\\items\\Extracted')
+            zip_lambdas('h:\\Desktop\\test', False)
 
-        :param target_path: Target path where the directories to archive are located
-        :param is_path_relative: Meaning the target directory/s path are relative to
-                script path. If set to false, the target_path value must be absolute
-        :param out_file_ext: File format for the archive file
-        :return: None
-    """
+            :param target_path: Target path where the directories to archive are located
+            :param is_path_relative: Meaning the target directory/s path are relative to
+                    script path. If set to false, the target_path value must be absolute
+            :param out_file_ext: File format for the archive file
+            :return: None
+        """
 
-    if is_path_relative:
-        target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_path)
-        file_path = os.path.join(self.__base_dir, target_path)
-    else:
-        target_archival_path = os.path.join(target_path, self.__archival_path)
-        file_path = target_path
-
-    print(f'\nBase Directory {base_dir}')
-    print(f'Target archival path {target_archival_path}')
-
-    # Create target dir
-    if not os.path.exists(target_archival_path):
-        print(f'Creating output directory: {target_archival_path}')
-        os.makedirs(target_archival_path)
-
-    # Create each archive files
-    for root, dirs, files in os.walk(file_path):
-        if dirs:
-            continue # Wait the next traversal when target files are the root dirs
+        if is_path_relative:
+            target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_path)
+            file_path = os.path.join(self.__base_dir, target_path)
         else:
-            lambda_package = root.split(os.sep)[-1]
+            target_archival_path = os.path.join(target_path, self.__archival_path)
+            file_path = target_path
 
-            # Do not include the output directory
-            if lambda_package == self.__archival_path:
-                continue
+        print(f'\nBase Directory {base_dir}')
+        print(f'Target archival path {target_archival_path}')
 
-            package_path = os.path.join(target_archival_path, lambda_package)
-            print(f'Archiving contents of {package_path}')
+        # Create target dir
+        if not os.path.exists(target_archival_path):
+            print(f'Creating output directory: {target_archival_path}')
+            os.makedirs(target_archival_path)
 
-            # Use zipFile since multiple script can be inside a lambda package
-            with zipfile.ZipFile(package_path + out_file_ext, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-                for file in files:
-                    zip_file.write(os.path.join(root, file), file)
+        # Create each archive files
+        for root, dirs, files in os.walk(file_path):
+            if dirs:
+                continue    # Wait the next traversal when target files are the root dirs
+            else:
+                lambda_package = root.split(os.sep)[-1]
+
+                # Do not include the output directory
+                if lambda_package == self.__archival_path:
+                    continue
+
+                package_path = os.path.join(target_archival_path, lambda_package)
+                print(f'Archiving contents of {package_path}')
+
+                # Use zipFile since multiple script can be inside a lambda package
+                with zipfile.ZipFile(package_path + out_file_ext, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+                    for file in files:
+                        zip_file.write(os.path.join(root, file), file)
 
     # Setters
     def set_extraction_path(self, extraction_path):
