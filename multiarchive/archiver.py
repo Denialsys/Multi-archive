@@ -216,7 +216,7 @@ class Archiver:
             except Exception as e:
                 print(f'Error has occurred while archiving {e.args}')
 
-    def archive_lambdas(
+    def zip_lambdas(
             self,
             target_path,
             is_path_relative=True,
@@ -228,8 +228,8 @@ class Archiver:
     lambda script inside. This can be used for AWS Lambda backup
 
     Example usage:
-        archive_lambdas('targ\\items\\Extracted')
-        archive_lambdas('h:\\Desktop\\test', False)
+        zip_lambdas('targ\\items\\Extracted')
+        zip_lambdas('h:\\Desktop\\test', False)
 
         :param target_path: Target path where the directories to archive are located
         :param is_path_relative: Meaning the target directory/s path are relative to
