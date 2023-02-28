@@ -1,7 +1,7 @@
 import zipfile
 import os
 # from dotenv import load_dotenv
-from randomstr import Randomizer
+from multiarchive.randomstr import Randomizer
 import subprocess
 import itertools
 
