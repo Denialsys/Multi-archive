@@ -1,0 +1,10 @@
+LICENSE
+README.md
+setup.py
+Multi_archive.egg-info/PKG-INFO
+Multi_archive.egg-info/SOURCES.txt
+Multi_archive.egg-info/dependency_links.txt
+Multi_archive.egg-info/top_level.txt
+multiarchive/__init__.py
+multiarchive/archiver.py
+multiarchive/randomstr.py

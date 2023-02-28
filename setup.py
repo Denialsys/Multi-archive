@@ -1,4 +1,4 @@
-from setuptools import setup, find_package
+from setuptools import setup, find_packages
 import os
 
 
@@ -14,7 +14,7 @@ setup(
     author_email="<denialsys@gmail.com>",
     description=DESCRIPTION,
     long_description_content_type="text/markdown",
-    long_description=long_description,
+    long_description=LONG_DESCRIPTION,
     packages=find_packages(),
     install_requires=['', '', ''],
     keywords=['python', 'zip', 'archive', '7zip'],

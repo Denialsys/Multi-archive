@@ -1,0 +1,17 @@
+Metadata-Version: 2.1
+Name: Multi-archive
+Version: 0.0.1
+Summary: For multiple compression and decompression
+Home-page: UNKNOWN
+Author: Denialsys (Jenver I.)
+Author-email: <denialsys@gmail.com>
+License: UNKNOWN
+Description: Package for programmatic archival or extraction of archive files with passwords
+Keywords: python,zip,archive,7zip
+Platform: UNKNOWN
+Classifier: Development Status :: 2 - Developement
+Classifier: Intended Audience :: 
+Classifier: Programming Language :: Python :: 3
+Classifier: Operating System :: Unix
+Classifier: Operating System :: Microsoft :: Windows
+Description-Content-Type: text/markdown
