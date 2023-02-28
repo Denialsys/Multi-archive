@@ -21,8 +21,11 @@ Example usage for the package
 
 ```python
 import multiarchive
+
+# This will initialize the seed for creating a random password
 multiarchiver_obj = multiarchive('tuelzoJheKlIp2.t652')
-# OR
+
+# OR, initialize the module with the default password
 multiarchiver_obj = multiarchive()
 
 # See help for each member function to check the sample usage
