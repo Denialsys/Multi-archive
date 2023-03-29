@@ -52,3 +52,6 @@ archiver_obj.zip_with_dynamic_password('archive_files')
 archiver_obj.unzip_archives('archive_files\\Protected_Archive\\Extracted')
 ```
 
+## To do:
+- [ ] Add Filename and password mapping functionality for customized archive passwords for _unzip_archives_
+- [ ] Add functionality for targeting non-archive files (except directories)
