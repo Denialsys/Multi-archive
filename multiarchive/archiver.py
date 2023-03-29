@@ -74,6 +74,7 @@ class Archiver:
                 return
 
             zip_list = []
+            Randomizer_obj = Randomizer()
 
             if is_path_relative:
                 target_extraction_path = os.path.join(self.__base_dir, target_path, self.__extraction_path)
@@ -81,9 +82,6 @@ class Archiver:
             else:
                 target_extraction_path = os.path.join(target_path, self.__extraction_path)
                 zip_file_path = target_path
-
-            print(f'\nBase Directory {self.__base_dir}')
-            print(f'Target extraction path {target_extraction_path}')
 
             # Gather the files to extract
             for fyl in os.listdir(zip_file_path):
@@ -99,6 +97,7 @@ class Archiver:
             print('-----------')
 
             # Begin the extraction
+
             for fyl in zip_list:
                 print(f'Extracting: {fyl}')
 
@@ -115,7 +114,8 @@ class Archiver:
                         zipObj.extractall(current_zip_extraction_path, pwd=bytes(next(pwd), 'utf-8'))
 
                     elif pwd == 0:
-                        dynamic_password = Randomizer.create_random_str(
+
+                        dynamic_password = Randomizer_obj.create_random_str(
                             self.__main_password,
                             zip_filename,
                             self.__pwd_len
@@ -131,8 +131,8 @@ class Archiver:
     def zip_with_dynamic_password(
             self,
             target_path,
-            password_list=None,
             is_path_relative=True,
+            password_list=None,
             in_file_ext='.zip'):
         """
         Create multiple password-protected zip files with dynamic and random password
@@ -157,9 +157,11 @@ class Archiver:
             return
 
         # Check first if the list of password is a list type
-        if type(password_list) is not list:
+        if password_list is not None and type(password_list) is not list:
             print(f'Check if the password is a list type')
             return
+
+        Randomizer_obj = Randomizer()
 
         if is_path_relative:
             target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_path_protected)
@@ -168,8 +170,6 @@ class Archiver:
             target_archival_path = os.path.join(target_path, self.__archival_path_protected)
             file_path = target_path
 
-        print(f'\nBase Directory {self.__base_dir}')
-        print(f'Target archival path {target_archival_path}')
         zip_list = []
 
         # Gather the files to extract
@@ -190,7 +190,7 @@ class Archiver:
             # Set the file name, output zip file, the password
             zip_filename = fyl.split(os.sep)[-1]
             output_zip = os.path.join(target_archival_path, zip_filename)
-            dynamic_password = Randomizer.create_random_str(
+            dynamic_password = Randomizer_obj.create_random_str(
                 self.__main_password,
                 zip_filename,
                 self.__pwd_len
@@ -243,9 +243,6 @@ class Archiver:
         else:
             target_archival_path = os.path.join(target_path, self.__archival_path)
             file_path = target_path
-
-        print(f'\nBase Directory {self.__base_dir}')
-        print(f'Target archival path {target_archival_path}')
 
         # Create target dir
         if not os.path.exists(target_archival_path):
