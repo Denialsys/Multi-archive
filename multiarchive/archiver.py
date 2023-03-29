@@ -66,7 +66,7 @@ class Archiver:
             if type(pwd) == list:
                 pwd = itertools.cycle(pwd)
 
-            elif type(pwd) == str or pwd == 0:
+            elif type(pwd) == str or pwd == 0 or pwd is None:
                 pass
 
             else:
@@ -76,8 +76,8 @@ class Archiver:
             zip_list = []
 
             if is_path_relative:
-                target_extraction_path = os.path.join(base_dir, target_path, self.__extraction_path)
-                zip_file_path = os.path.join(base_dir, target_path)
+                target_extraction_path = os.path.join(self.__base_dir, target_path, self.__extraction_path)
+                zip_file_path = os.path.join(self.__base_dir, target_path)
             else:
                 target_extraction_path = os.path.join(target_path, self.__extraction_path)
                 zip_file_path = target_path
@@ -168,7 +168,7 @@ class Archiver:
             target_archival_path = os.path.join(target_path, self.__archival_path_protected)
             file_path = target_path
 
-        print(f'\nBase Directory {base_dir}')
+        print(f'\nBase Directory {self.__base_dir}')
         print(f'Target archival path {target_archival_path}')
         zip_list = []
 
@@ -244,7 +244,7 @@ class Archiver:
             target_archival_path = os.path.join(target_path, self.__archival_path)
             file_path = target_path
 
-        print(f'\nBase Directory {base_dir}')
+        print(f'\nBase Directory {self.__base_dir}')
         print(f'Target archival path {target_archival_path}')
 
         # Create target dir
@@ -255,7 +255,7 @@ class Archiver:
         # Create each archive files
         for root, dirs, files in os.walk(file_path):
             if dirs:
-                continue    # Wait the next traversal when target files are the root dirs
+                continue  # Wait the next traversal when target files are the root dirs
             else:
                 lambda_package = root.split(os.sep)[-1]
 
