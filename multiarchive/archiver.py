@@ -117,13 +117,24 @@ class Archiver:
 
                         dynamic_password = Randomizer_obj.create_random_str(
                             self.__main_password,
-                            zip_filename,
+                            f'{zip_filename}{in_file_ext}',
                             self.__pwd_len
                         )
-                        zipObj.extractall(current_zip_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
+
+                        # Remove the command line special characters
+                        for character in self.__cmd_special_chars:
+                            dynamic_password = dynamic_password.replace(character, '')
+
+                        try:
+                            zipObj.extractall(current_zip_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
+                        except Exception as e:
+                            print(f'Failed to extract using password: {dynamic_password}  -- {e.args}')
 
                     else:
-                        zipObj.extractall(current_zip_extraction_path)
+                        try:
+                            zipObj.extractall(current_zip_extraction_path)
+                        except Exception as e:
+                            print(f'Unable to extract: -- {e.args}')
 
         except Exception as e:
             print(f'Error during decompression of archives: {e.args}')
