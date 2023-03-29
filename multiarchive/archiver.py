@@ -19,6 +19,7 @@ class Archiver:
         self.__extraction_path = 'Extracted'
         self.__archival_path = 'Archived'
         self.__archival_path_protected = 'Protected_Archive'
+        self.__password_file = 'Password list.txt'
         self.__main_password = main_password
 
         # 7zip command, 0 - archive name, 1 - target file, 2 - password
@@ -97,7 +98,6 @@ class Archiver:
             print('-----------')
 
             # Begin the extraction
-
             for fyl in zip_list:
                 print(f'Extracting: {fyl}')
 
@@ -153,9 +153,9 @@ class Archiver:
             zip_with_dynamic_password('F:\\Desktop\\items', False)
 
             :param target_path: Target path where the directories to archive are located
-            :param password_list: list of password to feed on archiving files
             :param is_path_relative: Meaning the target directory/s path are relative to
                     script path. If set to false, the target_path value must be absolute
+            :param password_list: list of password to feed on archiving files
             :param in_file_ext: File format for the archive file
             :return: None
         """
@@ -173,6 +173,8 @@ class Archiver:
             return
 
         Randomizer_obj = Randomizer()
+        zip_list = []
+        password_list = {}
 
         if is_path_relative:
             target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_path_protected)
@@ -180,8 +182,6 @@ class Archiver:
         else:
             target_archival_path = os.path.join(target_path, self.__archival_path_protected)
             file_path = target_path
-
-        zip_list = []
 
         # Gather the files to extract
         for fyl in os.listdir(file_path):
@@ -216,6 +216,8 @@ class Archiver:
             process_cmd = self.__template_cmd.format(output_zip, fyl, dynamic_password)
             process_cmd = process_cmd.split('\n')
 
+            password_list[zip_filename] = dynamic_password
+
             # Start the compression
             try:
                 subprocess.Popen(
@@ -225,6 +227,10 @@ class Archiver:
                 )
             except Exception as e:
                 print(f'Error has occurred while archiving {e.args}')
+
+        with open(os.path.join(target_archival_path, self.__password_file), 'w') as password_list_file:
+            for file_name in password_list.keys():
+                password_list_file.write(f'{file_name} : {password_list[file_name]}\n')
 
     def zip_lambdas(
             self,
