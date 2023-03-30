@@ -26,11 +26,29 @@ class Archiver:
 
         # 7zip command, 0 - archive name, 1 - target file, 2 - password
         self.__template_cmd = '7z\na\n{0}\n{1}\n-mx5\n-p{2}'
-        self.__cmd_special_chars = {ord(x): None for x in '(){}&"><|^'}
+        self.__cmd_special_chars = {ord(x): None for x in '(){}&\'"><|^'}
 
         # If over than 64 chars, it will be encrypted with SHA-1
         # if so, zip file may have two correct passwords
         self.__pwd_len = 62
+
+    def __create_protected_archive(self, output_file, input_file, password):
+
+        # Construct the command to zip file
+        print(f'Creating: {output_file}, password: {password}')
+        process_cmd = self.__template_cmd.format(output_file, input_file, password)
+        process_cmd = process_cmd.split('\n')
+
+        # Start the compression
+        try:
+            subprocess.Popen(
+                process_cmd,
+                stderr=subprocess.STDOUT,
+                stdout=subprocess.PIPE
+            )
+        except Exception as e:
+            print(f'Error has occurred while archiving {e.args}')
+        pass
 
     def unzip_archives(
             self,
@@ -144,11 +162,13 @@ class Archiver:
             self,
             target_path,
             is_path_relative=True,
-            pwd=None,
+            pwd=0,
             in_file_ext='.zip'):
         """
         Create multiple password-protected zip files with dynamic and random password
         The target files must be archived, file will be nested but easier to process
+
+        Note: Gathered file to be archived are sorted alphabetically
 
         Example usage:
             zip_with_dynamic_password('F:\\Desktop\\items', False)
@@ -176,7 +196,7 @@ class Archiver:
             print(f'7zip is not available {e.args}')
             return
 
-        if pwd is None or pwd == 0:
+        if pwd == 0:
             pass
 
         elif type(pwd) == str:
@@ -191,11 +211,9 @@ class Archiver:
                 pwd[pwd_key] = pwd[pwd_key].translate(self.__cmd_special_chars)
 
         else:
-            print(f'Check if the password is a list type')
+            print(f'Check if the password is a valid type')
             return
 
-        print(pwd)
-        return
         Randomizer_obj = Randomizer()
         zip_list = []
         pwd_list = {}
@@ -207,7 +225,7 @@ class Archiver:
             target_archival_path = os.path.join(target_path, self.__archival_dir_protected)
             file_path = target_path
 
-        # Gather the files to extract
+        # Gather the files to archive
         for fyl in os.listdir(file_path):
             if fyl.endswith(in_file_ext):
                 zip_list.append(os.path.join(file_path, fyl))
@@ -225,31 +243,38 @@ class Archiver:
             # Set the file name, output zip file, the password
             zip_filename = fyl.split(os.sep)[-1]
             output_zip = os.path.join(target_archival_path, zip_filename)
-            dynamic_password = Randomizer_obj.create_random_str(
-                self.__main_password,
-                zip_filename,
-                self.__pwd_len
-            )
+            processed_password = ''
 
-            # Remove the command line special characters
-            dynamic_password = dynamic_password.translate(self.__cmd_special_chars)
+            if pwd == 0:
 
-            # Construct the command to zip file
-            print(f'Creating: {output_zip}, password: {dynamic_password}')
-            process_cmd = self.__template_cmd.format(output_zip, fyl, dynamic_password)
-            process_cmd = process_cmd.split('\n')
-
-            pwd_list[zip_filename] = dynamic_password
-
-            # Start the compression
-            try:
-                subprocess.Popen(
-                    process_cmd,
-                    stderr=subprocess.STDOUT,
-                    stdout=subprocess.PIPE
+                dynamic_password = Randomizer_obj.create_random_str(
+                    self.__main_password,
+                    zip_filename,
+                    self.__pwd_len
                 )
-            except Exception as e:
-                print(f'Error has occurred while archiving {e.args}')
+                processed_password = dynamic_password.translate(self.__cmd_special_chars)
+
+            elif type(pwd) == str:
+                processed_password = pwd
+
+            elif type(pwd) == itertools.cycle:
+                processed_password = next(pwd)
+
+            elif type(pwd) == dict:
+                try:
+                    processed_password = pwd[os.path.basename(fyl)]
+
+                except KeyError:
+                    # No password was found so create one
+                    mapped_password = Randomizer_obj.create_random_str(
+                        self.__main_password,
+                        zip_filename,
+                        self.__pwd_len
+                    )
+                    processed_password = mapped_password.translate(self.__cmd_special_chars)
+
+            self.__create_protected_archive(output_zip, fyl, processed_password)
+            pwd_list[zip_filename] = processed_password
 
         with open(os.path.join(target_archival_path, self.__password_file), 'w') as pwd_list_file:
             for file_name in pwd_list.keys():
