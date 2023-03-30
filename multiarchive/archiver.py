@@ -16,9 +16,9 @@ class Archiver:
                     on each archive
         """
         self.__base_dir = os.getcwd()
-        self.__extraction_path = 'Extracted'
-        self.__archival_path = 'Archived'
-        self.__archival_path_protected = 'Protected_Archive'
+        self.__extraction_dir = 'Extracted'
+        self.__archival_dir = 'Archived'
+        self.__archival_dir_protected = 'Protected_Archive'
         self.__password_file = 'Password list.txt'
         self.__main_password = main_password
 
@@ -57,7 +57,7 @@ class Archiver:
             :param out_file_ext: The output archive file extension
             :param pwd: Password in string or list format, rules:
                     - String type: The single password will be applied to all archive
-                    - List type: The password will be mapped as to each archive files
+                    - List type: Each password will be cycled to each archive files
                     - 0 (zero): The password will be dynamic based from the archived name and randomizer
             :return: None
         """
@@ -78,10 +78,10 @@ class Archiver:
             Randomizer_obj = Randomizer()
 
             if is_path_relative:
-                target_extraction_path = os.path.join(self.__base_dir, target_path, self.__extraction_path)
+                target_extraction_path = os.path.join(self.__base_dir, target_path, self.__extraction_dir)
                 zip_file_path = os.path.join(self.__base_dir, target_path)
             else:
-                target_extraction_path = os.path.join(target_path, self.__extraction_path)
+                target_extraction_path = os.path.join(target_path, self.__extraction_dir)
                 zip_file_path = target_path
 
             # Gather the files to extract
@@ -176,10 +176,10 @@ class Archiver:
         password_list = {}
 
         if is_path_relative:
-            target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_path_protected)
+            target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_dir_protected)
             file_path = os.path.join(self.__base_dir, target_path)
         else:
-            target_archival_path = os.path.join(target_path, self.__archival_path_protected)
+            target_archival_path = os.path.join(target_path, self.__archival_dir_protected)
             file_path = target_path
 
         # Gather the files to extract
@@ -253,10 +253,10 @@ class Archiver:
         """
 
         if is_path_relative:
-            target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_path)
+            target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_dir)
             file_path = os.path.join(self.__base_dir, target_path)
         else:
-            target_archival_path = os.path.join(target_path, self.__archival_path)
+            target_archival_path = os.path.join(target_path, self.__archival_dir)
             file_path = target_path
 
         # Create target dir
@@ -272,7 +272,7 @@ class Archiver:
                 lambda_package = root.split(os.sep)[-1]
 
                 # Do not include the output directory
-                if lambda_package == self.__archival_path:
+                if lambda_package == self.__archival_dir:
                     continue
 
                 package_path = os.path.join(target_archival_path, lambda_package)
@@ -285,10 +285,10 @@ class Archiver:
 
     # Setters
     def set_extraction_path(self, extraction_path):
-        self.__extraction_path = extraction_path
+        self.__extraction_dir = extraction_path
 
     def set_archival_path(self, archival_path):
-        self.__archival_path = archival_path
+        self.__archival_dir = archival_path
 
     def set_protected_archival_path(self, archival_path):
-        self.__archival_path_protected = archival_path
+        self.__archival_dir_protected = archival_path
