@@ -24,7 +24,7 @@ class Archiver:
 
         # 7zip command, 0 - archive name, 1 - target file, 2 - password
         self.__template_cmd = '7z\na\n{0}\n{1}\n-mx5\n-p{2}'
-        self.__cmd_special_chars = '(){}&"><|^'
+        self.__cmd_special_chars = {ord(x): None for x in '(){}&"><|^'}
 
         # If over than 64 chars, it will be encrypted with SHA-1
         # if so, zip file may have two correct passwords
@@ -122,8 +122,7 @@ class Archiver:
                         )
 
                         # Remove the command line special characters
-                        for character in self.__cmd_special_chars:
-                            dynamic_password = dynamic_password.replace(character, '')
+                        dynamic_password = dynamic_password.translate(self.__cmd_special_chars)
 
                         try:
                             zipObj.extractall(current_zip_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
@@ -208,8 +207,7 @@ class Archiver:
             )
 
             # Remove the command line special characters
-            for character in self.__cmd_special_chars:
-                dynamic_password = dynamic_password.replace(character, '')
+            dynamic_password = dynamic_password.translate(self.__cmd_special_chars)
 
             # Construct the command to zip file
             print(f'Creating: {output_zip}, password: {dynamic_password}')
