@@ -14,6 +14,8 @@ class Archiver:
 
             :param main_password: Main password for which the dynamic password will be derived
                     on each archive
+
+            Current supported platform: Windows
         """
         self.__base_dir = os.getcwd()
         self.__extraction_dir = 'Extracted'
@@ -142,7 +144,7 @@ class Archiver:
             self,
             target_path,
             is_path_relative=True,
-            password_list=None,
+            pwd=None,
             in_file_ext='.zip'):
         """
         Create multiple password-protected zip files with dynamic and random password
@@ -154,7 +156,15 @@ class Archiver:
             :param target_path: Target path where the directories to archive are located
             :param is_path_relative: Meaning the target directory/s path are relative to
                     script path. If set to false, the target_path value must be absolute
-            :param password_list: list of password to feed on archiving files
+            :param pwd: Password in string, json or list format, rules:
+                    - String type: The single password will be applied to all archive, will be
+                            sanitized for allowable characters
+                    - List type: Each password will be cycled to each archive files, all
+                            elements must be string and will be sanitized for allowable characters
+                    - Json type: Each file will be archived using the password specified to its
+                            filename, if no password was found, dynamic password will be generated,
+                            each password must be string and will be sanitized for allowable characters
+                    - 0 (zero): The password will be dynamic based from the archived name and randomizer
             :param in_file_ext: File format for the archive file
             :return: None
         """
@@ -166,14 +176,29 @@ class Archiver:
             print(f'7zip is not available {e.args}')
             return
 
-        # Check first if the list of password is a list type
-        if password_list is not None and type(password_list) is not list:
+        if pwd is None or pwd == 0:
+            pass
+
+        elif type(pwd) == str:
+            pwd = pwd.translate(self.__cmd_special_chars)
+
+        elif type(pwd) == list:
+            raw_pass = [password.translate(self.__cmd_special_chars) for password in pwd]
+            pwd = itertools.cycle(raw_pass)
+
+        elif type(pwd) == dict:
+            for pwd_key in pwd.keys():
+                pwd[pwd_key] = pwd[pwd_key].translate(self.__cmd_special_chars)
+
+        else:
             print(f'Check if the password is a list type')
             return
 
+        print(pwd)
+        return
         Randomizer_obj = Randomizer()
         zip_list = []
-        password_list = {}
+        pwd_list = {}
 
         if is_path_relative:
             target_archival_path = os.path.join(self.__base_dir, target_path, self.__archival_dir_protected)
@@ -214,7 +239,7 @@ class Archiver:
             process_cmd = self.__template_cmd.format(output_zip, fyl, dynamic_password)
             process_cmd = process_cmd.split('\n')
 
-            password_list[zip_filename] = dynamic_password
+            pwd_list[zip_filename] = dynamic_password
 
             # Start the compression
             try:
@@ -226,9 +251,9 @@ class Archiver:
             except Exception as e:
                 print(f'Error has occurred while archiving {e.args}')
 
-        with open(os.path.join(target_archival_path, self.__password_file), 'w') as password_list_file:
-            for file_name in password_list.keys():
-                password_list_file.write(f'{file_name} : {password_list[file_name]}\n')
+        with open(os.path.join(target_archival_path, self.__password_file), 'w') as pwd_list_file:
+            for file_name in pwd_list.keys():
+                pwd_list_file.write(f'{file_name} : {pwd_list[file_name]}\n')
 
     def zip_lambdas(
             self,
