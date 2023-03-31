@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 import os
 
 
-VERSION = '0.1.3'
+VERSION = '0.1.5'
 DESCRIPTION = 'For multiple compression and decompression'
 LONG_DESCRIPTION = 'Package for programmatic archival or extraction of archive files with passwords'
 

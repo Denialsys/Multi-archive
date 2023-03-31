@@ -16,9 +16,18 @@ $ pipenv install git+https://github.com/Denialsys/Multi-archive.git#egg=Multi-ar
 
 
 ## Example usage:
+To enable creation of password file containing the archive and their corresponding 
+password as well as setting the verbosity
+```python
+import multiarchive
+
+archiver_obj = multiarchive.Archiver('skivyttes')
+archiver_obj.set_password_file_creation(True)
+archiver_obj.set_verbose(True)
+```
+
 
 Example usage for the package
-
 ```python
 import multiarchive
 
@@ -52,7 +61,31 @@ archiver_obj.zip_with_dynamic_password('archive_files')
 archiver_obj.unzip_archives('archive_files\\Protected_Archive\\Extracted')
 ```
 
+Password setting for the extraction or archiving, the following are applicable for _unzip_archives_ and _zip_with_dynamic_password_
+```python
+import multiarchive
+
+archiver_obj = multiarchive.Archiver('skivyttes')
+
+#Example 1: Automatically generate password for each file
+archiver_obj.zip_with_dynamic_password('archive_files', pwd=0)
+
+#Example 2: Use a list of password, setting of password will cycle through (see itertools.cycle)
+passwords = ['one', 'two', 'three']
+archiver_obj.zip_with_dynamic_password('archive_files', pwd=passwords)
+
+#Example 3: Use a single password for all archives
+archiver_obj.zip_with_dynamic_password('archive_files', pwd='thisw1llb3th3passw0rd')
+
+#Example 4: Using a password mapping create a json object with the filename and password
+#note that if a filename is not found in the mapping, dynamic password will be created instead
+pass_map = {'foo.zip': 'fumi', 'bar.zip': 'calter'}
+archiver_obj.zip_with_dynamic_password('archive_files', pwd=pass_map)
+
+
+```
+
 ## To do:
 - [x] Add Filename and password mapping functionality for customized archive passwords for _zip_with_dynamic_password_
-- [ ] Add Filename and password mapping functionality for customized archive passwords for _unzip_archives_
+- [x] Add Filename and password mapping functionality for customized archive passwords for _unzip_archives_
 - [ ] Add functionality for targeting non-archive files (except directories)

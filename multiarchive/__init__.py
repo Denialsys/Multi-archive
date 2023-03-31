@@ -1,4 +1,4 @@
 from multiarchive.archiver import Archiver
 from multiarchive.randomstr import Randomizer
 
-VERSION = '0.1.3'
+VERSION = '0.1.5'
