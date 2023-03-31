@@ -33,12 +33,11 @@ class Archiver:
 
         self.__generate_password_file = False
         self.__randomizer_obj = Randomizer()
-        self.__is_verbose = False
 
     def __create_protected_archive(self, output_file, input_file, password):
 
         # Construct the command to zip file
-        print(f'Creating: {output_file}, password: {password}')
+        logging.debug(f'Creating: {output_file}, password: {password}')
         process_cmd = self.__template_cmd.format(output_file, input_file, password)
         process_cmd = process_cmd.split('\n')
 
@@ -106,7 +105,7 @@ class Archiver:
                 pass
 
             else:
-                print(f'Invalid type of password: {type(pwd)}')
+                logging.error(f'Invalid type of password: {type(pwd)}')
                 return
 
             zip_list = []
@@ -126,14 +125,12 @@ class Archiver:
             # If the target directory does not exist yet
             if zip_list:
                 if not os.path.exists(target_extraction_path):
-                    print(f'Creating output directory: {target_extraction_path}')
+                    logging.debug(f'Creating output directory: {target_extraction_path}')
                     os.makedirs(target_extraction_path)
-
-            print('-----------')
 
             # Begin the extraction
             for fyl in zip_list:
-                print(f'Extracting: {fyl}')
+                logging.debug(f'Extracting: {fyl}')
 
                 zip_filename = fyl.split(os.sep)[-1].replace(out_file_ext, '')
                 current_zip_extraction_path = os.path.join(target_extraction_path, zip_filename)
@@ -153,7 +150,7 @@ class Archiver:
                         try:
                             zipObj.extractall(current_zip_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
                         except Exception as e:
-                            print(f'Failed to extract using password: {dynamic_password}  -- {e.args}')
+                            logging.warning(f'Extraction failed with: {dynamic_password}  -- {e.args}')
 
                     elif type(pwd) == dict:
                         try:
@@ -164,17 +161,18 @@ class Archiver:
 
                         try:
                             zipObj.extractall(current_zip_extraction_path, pwd=bytes(assigned_password, 'utf-8'))
+
                         except Exception as e:
-                            print(f'Failed to extract using password: {assigned_password}  -- {e.args}')
+                            logging.warning(f'Extraction failed with: {dynamic_password}  -- {e.args}')
 
                     else:
                         try:
                             zipObj.extractall(current_zip_extraction_path)
                         except Exception as e:
-                            print(f'Unable to extract: -- {e.args}')
+                            logging.warning(f'Unable to extract: -- {e.args}')
 
         except Exception as e:
-            print(f'Error during decompression of archives: {e.args}')
+            logging.error(f'Error during extracting of archives: {e.args}')
 
     def zip_with_dynamic_password(
             self,
@@ -211,7 +209,7 @@ class Archiver:
         try:
             subprocess.Popen(['7z'], stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
         except Exception as e:
-            print(f'7zip is not available {e.args}')
+            logging.critical(f'7zip is not available {e.args}')
             return
 
         if pwd == 0:
@@ -229,7 +227,7 @@ class Archiver:
                 pwd[pwd_key] = pwd[pwd_key].translate(self.__cmd_special_chars)
 
         else:
-            print(f'Check if the password is a valid type')
+            logging.error(f'Invalid type of password: {type(pwd)}')
             return
 
         zip_list = []
@@ -250,10 +248,8 @@ class Archiver:
         # If the target directory does not exist yet
         if zip_list:
             if not os.path.exists(target_archival_path):
-                print(f'Creating output directory: {target_archival_path}')
+                logging.info(f'Creating output directory: {target_archival_path}')
                 os.makedirs(target_archival_path)
-
-        print('-----------')
 
         for fyl in zip_list:
 
@@ -317,7 +313,7 @@ class Archiver:
 
         # Create target dir
         if not os.path.exists(target_archival_path):
-            print(f'Creating output directory: {target_archival_path}')
+            logging.debug(f'Creating output directory: {target_archival_path}')
             os.makedirs(target_archival_path)
 
         # Create each archive files
@@ -332,7 +328,7 @@ class Archiver:
                     continue
 
                 package_path = os.path.join(target_archival_path, lambda_package)
-                print(f'Archiving contents of {package_path}')
+                logging.debug(f'Archiving contents of {package_path}')
 
                 # Use zipFile since multiple script can be inside a lambda package
                 with zipfile.ZipFile(package_path + out_file_ext, 'w', zipfile.ZIP_DEFLATED) as zip_file:
@@ -353,4 +349,7 @@ class Archiver:
         self.__generate_password_file = is_enabled
 
     def set_verbose(self, is_enabled):
-        self.__is_verbose = is_enabled
+        if is_enabled:
+            logging.basicConfig(level=logging.DEBUG)
+        else:
+            logging.basicConfig(level=logging.WARNING)
