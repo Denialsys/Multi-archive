@@ -1,10 +1,9 @@
 import zipfile
 import os
-# from dotenv import load_dotenv
 from multiarchive.randomstr import Randomizer
 import subprocess
 import itertools
-
+import logging
 
 class Archiver:
 
@@ -34,6 +33,7 @@ class Archiver:
 
         self.__generate_password_file = False
         self.__randomizer_obj = Randomizer()
+        self.__is_verbose = False
 
     def __create_protected_archive(self, output_file, input_file, password):
 
@@ -50,8 +50,7 @@ class Archiver:
                 stdout=subprocess.PIPE
             )
         except Exception as e:
-            print(f'Error has occurred while archiving {e.args}')
-        pass
+            logging.warning(f'Failed to archive {output_file} -- {e.args}')
 
     def __create_dynamic_password(self, zip_filename):
         dynamic_password = self.__randomizer_obj.create_random_str(
@@ -92,6 +91,8 @@ class Archiver:
             :param pwd: Password in string or list format, rules:
                     - String type: The single password will be applied to all archive
                     - List type: Each password will be cycled to each archive files
+                    - Json type: Each file will be extracted using the password specified to its
+                            filename
                     - 0 (zero): The password will be dynamic based from the archived name and randomizer
             :return: None
         """
@@ -147,20 +148,24 @@ class Archiver:
                         zipObj.extractall(current_zip_extraction_path, pwd=bytes(next(pwd), 'utf-8'))
 
                     elif pwd == 0:
-                        # dynamic_password = Randomizer_obj.create_random_str(
-                        #     self.__main_password,
-                        #     f'{zip_filename}{in_file_ext}',
-                        #     self.__pwd_len
-                        # )
-                        #
-                        # # Remove the command line special characters
-                        # dynamic_password = dynamic_password.translate(self.__cmd_special_chars)
-
                         dynamic_password = self.__create_dynamic_password(f'{zip_filename}{in_file_ext}')
+
                         try:
                             zipObj.extractall(current_zip_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
                         except Exception as e:
                             print(f'Failed to extract using password: {dynamic_password}  -- {e.args}')
+
+                    elif type(pwd) == dict:
+                        try:
+                            assigned_password = pwd[f'{zip_filename}{in_file_ext}']
+
+                        except KeyError:
+                            assigned_password = self.__create_dynamic_password(f'{zip_filename}{in_file_ext}')
+
+                        try:
+                            zipObj.extractall(current_zip_extraction_path, pwd=bytes(assigned_password, 'utf-8'))
+                        except Exception as e:
+                            print(f'Failed to extract using password: {assigned_password}  -- {e.args}')
 
                     else:
                         try:
@@ -258,14 +263,8 @@ class Archiver:
             processed_password = ''
 
             if pwd == 0:
-
-                # dynamic_password = Randomizer_obj.create_random_str(
-                #     self.__main_password,
-                #     zip_filename,
-                #     self.__pwd_len
-                # )
-                # processed_password = dynamic_password.translate(self.__cmd_special_chars)
                 processed_password = self.__create_dynamic_password(zip_filename)
+
             elif type(pwd) == str:
                 processed_password = pwd
 
@@ -277,13 +276,6 @@ class Archiver:
                     processed_password = pwd[os.path.basename(fyl)]
 
                 except KeyError:
-                    # No password was found so create one
-                    # mapped_password = Randomizer_obj.create_random_str(
-                    #     self.__main_password,
-                    #     zip_filename,
-                    #     self.__pwd_len
-                    # )
-                    # processed_password = mapped_password.translate(self.__cmd_special_chars)
                     processed_password = self.__create_dynamic_password(zip_filename)
 
             self.__create_protected_archive(output_zip, fyl, processed_password)
@@ -357,5 +349,8 @@ class Archiver:
     def set_protected_archival_path(self, archival_path):
         self.__archival_dir_protected = archival_path
 
-    def set_password_file_creation(self, isEnabled):
-        self.__generate_password_file = isEnabled
+    def set_password_file_creation(self, is_enabled):
+        self.__generate_password_file = is_enabled
+
+    def set_verbose(self, is_enabled):
+        self.__is_verbose = is_enabled
