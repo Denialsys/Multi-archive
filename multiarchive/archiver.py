@@ -200,7 +200,7 @@ class Archiver:
                             filename, if no password was found, dynamic password will be generated,
                             each password must be string and will be sanitized for allowable characters
                     - 0 (zero): The password will be dynamic based from the archived name and randomizer
-            :param in_file_ext: File format of the archive file
+            :param in_file_ext: File format of the target files to archive
             :return: None
         """
 

@@ -88,4 +88,4 @@ archiver_obj.zip_with_dynamic_password('archive_files', pwd=pass_map)
 ## To do:
 - [x] Add Filename and password mapping functionality for customized archive passwords for _zip_with_dynamic_password_
 - [x] Add Filename and password mapping functionality for customized archive passwords for _unzip_archives_
-- [ ] Add functionality for targeting non-archive files (except directories)
+- [x] Add functionality for targeting non-archive files (except directories)
