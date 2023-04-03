@@ -166,7 +166,7 @@ class Archiver:
 
                     else:
                         try:
-                            zipObj.extractall(target_extraction_path)
+                            zipObj.extractall(os.path.join(target_extraction_path, zip_filename))
                         except Exception as e:
                             logging.warning(f'Unable to extract: -- {e.args}')
 
