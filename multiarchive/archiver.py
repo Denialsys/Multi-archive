@@ -7,7 +7,7 @@ import logging
 
 class Archiver:
 
-    def __init__(self, main_password="SuperSecretMainPassword"):
+    def __init__(self, main_password="SuperSecretMainPassw0rd"):
         """
         Initialization for the archiver class
 
@@ -68,7 +68,6 @@ class Archiver:
             target_path,
             is_path_relative=True,
             in_file_ext='.zip',
-            out_file_ext='.zip',
             pwd=None):
 
         """
@@ -87,7 +86,6 @@ class Archiver:
             :param is_path_relative: Meaning the archive file/s path are relative to script path
                     If set to false, the target_path value must be absolute
             :param in_file_ext: The input archive file extension
-            :param out_file_ext: The output archive file extension
             :param pwd: Password in string or list format, rules:
                     - String type: The single password will be applied to all archive
                     - List type: Each password will be cycled to each archive files
@@ -123,7 +121,10 @@ class Archiver:
                 if fyl.endswith(in_file_ext):
                     zip_list.append(os.path.join(zip_file_path, fyl))
 
-            # If the target directory does not exist yet
+            if not len(zip_list):
+                logging.info('Nothing to archive')
+                return
+
             if zip_list:
                 if not os.path.exists(target_extraction_path):
                     logging.debug(f'Creating output directory: {target_extraction_path}')
@@ -132,14 +133,9 @@ class Archiver:
             # Begin the extraction
             for fyl in zip_list:
                 logging.debug(f'Extracting: {fyl}')
-
-                zip_filename = fyl.split(os.sep)[-1].replace(out_file_ext, '')
-                target_extraction_path = target_extraction_path
-                # current_zip_extraction_path = os.path.join(target_extraction_path, zip_filename)
-                # print(f'extraction path {target_extraction_path}')
+                zip_filename = os.path.splitext(os.path.basename(fyl))[0]
 
                 # Extract all the contents of zip file into target directory
-                # Use password if password was specified
                 with zipfile.ZipFile(fyl, 'r') as zipObj:
                     if type(pwd) == str:
                         zipObj.extractall(target_extraction_path, pwd=bytes(pwd, 'utf-8'))
@@ -260,9 +256,6 @@ class Archiver:
                 os.makedirs(target_archival_path)
 
         for fyl in zip_list:
-
-            # Set the file name, output zip file, the password
-            # zip_filename = fyl.split(os.sep)[-1]
             # Set the file type to output file
             zip_filename = os.path.splitext(os.path.basename(fyl))[0] + self.__archive_output_extension
 
