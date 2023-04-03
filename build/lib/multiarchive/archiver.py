@@ -7,7 +7,7 @@ import logging
 
 class Archiver:
 
-    def __init__(self, main_password="SuperSecretMainPassword"):
+    def __init__(self, main_password="SuperSecretMainPassw0rd"):
         """
         Initialization for the archiver class
 
@@ -20,6 +20,7 @@ class Archiver:
         self.__extraction_dir = 'Extracted'
         self.__archival_dir = 'Archived'
         self.__archival_dir_protected = 'Protected_Archive'
+        self.__archive_output_extension = '.zip'
         self.__password_file = 'Password list.txt'
         self.__main_password = main_password
 
@@ -67,7 +68,6 @@ class Archiver:
             target_path,
             is_path_relative=True,
             in_file_ext='.zip',
-            out_file_ext='.zip',
             pwd=None):
 
         """
@@ -86,7 +86,6 @@ class Archiver:
             :param is_path_relative: Meaning the archive file/s path are relative to script path
                     If set to false, the target_path value must be absolute
             :param in_file_ext: The input archive file extension
-            :param out_file_ext: The output archive file extension
             :param pwd: Password in string or list format, rules:
                     - String type: The single password will be applied to all archive
                     - List type: Each password will be cycled to each archive files
@@ -122,7 +121,10 @@ class Archiver:
                 if fyl.endswith(in_file_ext):
                     zip_list.append(os.path.join(zip_file_path, fyl))
 
-            # If the target directory does not exist yet
+            if not len(zip_list):
+                logging.info('Nothing to archive')
+                return
+
             if zip_list:
                 if not os.path.exists(target_extraction_path):
                     logging.debug(f'Creating output directory: {target_extraction_path}')
@@ -131,24 +133,21 @@ class Archiver:
             # Begin the extraction
             for fyl in zip_list:
                 logging.debug(f'Extracting: {fyl}')
-
-                zip_filename = fyl.split(os.sep)[-1].replace(out_file_ext, '')
-                current_zip_extraction_path = os.path.join(target_extraction_path, zip_filename)
+                zip_filename = os.path.splitext(os.path.basename(fyl))[0]
 
                 # Extract all the contents of zip file into target directory
-                # Use password if password was specified
                 with zipfile.ZipFile(fyl, 'r') as zipObj:
                     if type(pwd) == str:
-                        zipObj.extractall(current_zip_extraction_path, pwd=bytes(pwd, 'utf-8'))
+                        zipObj.extractall(target_extraction_path, pwd=bytes(pwd, 'utf-8'))
 
                     elif type(pwd) == itertools.cycle:
-                        zipObj.extractall(current_zip_extraction_path, pwd=bytes(next(pwd), 'utf-8'))
+                        zipObj.extractall(target_extraction_path, pwd=bytes(next(pwd), 'utf-8'))
 
                     elif pwd == 0:
                         dynamic_password = self.__create_dynamic_password(f'{zip_filename}{in_file_ext}')
 
                         try:
-                            zipObj.extractall(current_zip_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
+                            zipObj.extractall(target_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
                         except Exception as e:
                             logging.warning(f'Extraction failed with: {dynamic_password}  -- {e.args}')
 
@@ -160,14 +159,14 @@ class Archiver:
                             assigned_password = self.__create_dynamic_password(f'{zip_filename}{in_file_ext}')
 
                         try:
-                            zipObj.extractall(current_zip_extraction_path, pwd=bytes(assigned_password, 'utf-8'))
+                            zipObj.extractall(target_extraction_path, pwd=bytes(assigned_password, 'utf-8'))
 
                         except Exception as e:
                             logging.warning(f'Extraction failed with: {dynamic_password}  -- {e.args}')
 
                     else:
                         try:
-                            zipObj.extractall(current_zip_extraction_path)
+                            zipObj.extractall(target_extraction_path)
                         except Exception as e:
                             logging.warning(f'Unable to extract: -- {e.args}')
 
@@ -179,7 +178,7 @@ class Archiver:
             target_path,
             is_path_relative=True,
             pwd=0,
-            in_file_ext='.zip'):
+            in_file_ext='*'):
         """
         Create multiple password-protected zip files with dynamic and random password
         The target files must be archived, file will be nested but easier to process
@@ -201,7 +200,7 @@ class Archiver:
                             filename, if no password was found, dynamic password will be generated,
                             each password must be string and will be sanitized for allowable characters
                     - 0 (zero): The password will be dynamic based from the archived name and randomizer
-            :param in_file_ext: File format for the archive file
+            :param in_file_ext: File format of the target files to archive
             :return: None
         """
 
@@ -242,8 +241,13 @@ class Archiver:
 
         # Gather the files to archive
         for fyl in os.listdir(file_path):
-            if fyl.endswith(in_file_ext):
-                zip_list.append(os.path.join(file_path, fyl))
+            if in_file_ext == '*' or in_file_ext == '.*':
+                if os.path.isfile(os.path.join(file_path, fyl)):
+                    zip_list.append(os.path.join(file_path, fyl))
+
+            else:
+                if fyl.endswith(in_file_ext):
+                    zip_list.append(os.path.join(file_path, fyl))
 
         # If the target directory does not exist yet
         if zip_list:
@@ -252,9 +256,9 @@ class Archiver:
                 os.makedirs(target_archival_path)
 
         for fyl in zip_list:
+            # Set the file type to output file
+            zip_filename = os.path.splitext(os.path.basename(fyl))[0] + self.__archive_output_extension
 
-            # Set the file name, output zip file, the password
-            zip_filename = fyl.split(os.sep)[-1]
             output_zip = os.path.join(target_archival_path, zip_filename)
             processed_password = ''
 
@@ -276,6 +280,10 @@ class Archiver:
 
             self.__create_protected_archive(output_zip, fyl, processed_password)
             pwd_list[zip_filename] = processed_password
+
+        if not len(zip_list):
+            logging.info('Nothing to archive')
+            return
 
         if self.__generate_password_file:
             with open(os.path.join(target_archival_path, self.__password_file), 'w') as pwd_list_file:
@@ -347,6 +355,9 @@ class Archiver:
 
     def set_password_file_creation(self, is_enabled):
         self.__generate_password_file = is_enabled
+
+    def set_archive_output_extension(self, extnsn):
+        self.__archive_output_extension = extnsn
 
     def set_verbose(self, is_enabled):
         if is_enabled:
