@@ -20,6 +20,7 @@ class Archiver:
         self.__extraction_dir = 'Extracted'
         self.__archival_dir = 'Archived'
         self.__archival_dir_protected = 'Protected_Archive'
+        self.__archive_output_extension = '.zip'
         self.__password_file = 'Password list.txt'
         self.__main_password = main_password
 
@@ -259,7 +260,10 @@ class Archiver:
         for fyl in zip_list:
 
             # Set the file name, output zip file, the password
-            zip_filename = fyl.split(os.sep)[-1]
+            # zip_filename = fyl.split(os.sep)[-1]
+            # Set the file type to output file
+            zip_filename = os.path.splitext(os.path.basename(fyl))[0] + self.__archive_output_extension
+
             output_zip = os.path.join(target_archival_path, zip_filename)
             processed_password = ''
 
@@ -356,6 +360,9 @@ class Archiver:
 
     def set_password_file_creation(self, is_enabled):
         self.__generate_password_file = is_enabled
+
+    def set_archive_output_extension(self, extnsn):
+        self.__archive_output_extension = extnsn
 
     def set_verbose(self, is_enabled):
         if is_enabled:
