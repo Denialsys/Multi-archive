@@ -134,22 +134,24 @@ class Archiver:
                 logging.debug(f'Extracting: {fyl}')
 
                 zip_filename = fyl.split(os.sep)[-1].replace(out_file_ext, '')
-                current_zip_extraction_path = os.path.join(target_extraction_path, zip_filename)
+                target_extraction_path = target_extraction_path
+                # current_zip_extraction_path = os.path.join(target_extraction_path, zip_filename)
+                # print(f'extraction path {target_extraction_path}')
 
                 # Extract all the contents of zip file into target directory
                 # Use password if password was specified
                 with zipfile.ZipFile(fyl, 'r') as zipObj:
                     if type(pwd) == str:
-                        zipObj.extractall(current_zip_extraction_path, pwd=bytes(pwd, 'utf-8'))
+                        zipObj.extractall(target_extraction_path, pwd=bytes(pwd, 'utf-8'))
 
                     elif type(pwd) == itertools.cycle:
-                        zipObj.extractall(current_zip_extraction_path, pwd=bytes(next(pwd), 'utf-8'))
+                        zipObj.extractall(target_extraction_path, pwd=bytes(next(pwd), 'utf-8'))
 
                     elif pwd == 0:
                         dynamic_password = self.__create_dynamic_password(f'{zip_filename}{in_file_ext}')
 
                         try:
-                            zipObj.extractall(current_zip_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
+                            zipObj.extractall(target_extraction_path, pwd=bytes(dynamic_password, 'utf-8'))
                         except Exception as e:
                             logging.warning(f'Extraction failed with: {dynamic_password}  -- {e.args}')
 
@@ -161,14 +163,14 @@ class Archiver:
                             assigned_password = self.__create_dynamic_password(f'{zip_filename}{in_file_ext}')
 
                         try:
-                            zipObj.extractall(current_zip_extraction_path, pwd=bytes(assigned_password, 'utf-8'))
+                            zipObj.extractall(target_extraction_path, pwd=bytes(assigned_password, 'utf-8'))
 
                         except Exception as e:
                             logging.warning(f'Extraction failed with: {dynamic_password}  -- {e.args}')
 
                     else:
                         try:
-                            zipObj.extractall(current_zip_extraction_path)
+                            zipObj.extractall(target_extraction_path)
                         except Exception as e:
                             logging.warning(f'Unable to extract: -- {e.args}')
 
