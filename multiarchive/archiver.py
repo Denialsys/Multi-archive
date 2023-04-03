@@ -179,7 +179,7 @@ class Archiver:
             target_path,
             is_path_relative=True,
             pwd=0,
-            in_file_ext='.zip'):
+            in_file_ext='*'):
         """
         Create multiple password-protected zip files with dynamic and random password
         The target files must be archived, file will be nested but easier to process
@@ -201,7 +201,7 @@ class Archiver:
                             filename, if no password was found, dynamic password will be generated,
                             each password must be string and will be sanitized for allowable characters
                     - 0 (zero): The password will be dynamic based from the archived name and randomizer
-            :param in_file_ext: File format for the archive file
+            :param in_file_ext: File format of the archive file
             :return: None
         """
 
@@ -242,8 +242,13 @@ class Archiver:
 
         # Gather the files to archive
         for fyl in os.listdir(file_path):
-            if fyl.endswith(in_file_ext):
-                zip_list.append(os.path.join(file_path, fyl))
+            if in_file_ext == '*' or in_file_ext == '.*':
+                if os.path.isfile(os.path.join(file_path, fyl)):
+                    zip_list.append(os.path.join(file_path, fyl))
+
+            else:
+                if fyl.endswith(in_file_ext):
+                    zip_list.append(os.path.join(file_path, fyl))
 
         # If the target directory does not exist yet
         if zip_list:
@@ -276,6 +281,10 @@ class Archiver:
 
             self.__create_protected_archive(output_zip, fyl, processed_password)
             pwd_list[zip_filename] = processed_password
+
+        if not len(zip_list):
+            logging.info('Nothing to archive')
+            return
 
         if self.__generate_password_file:
             with open(os.path.join(target_archival_path, self.__password_file), 'w') as pwd_list_file:
